@@ -1,0 +1,265 @@
+//store pid and pname in a table that is displayed when listis called
+//terminateprocess api or ____api, pid verified in table not-invlaid printed
+//kill notepad?pid?
+
+//not a multi dimentional array -stored data of the same type
+//make a ll or make an array of structure(STRUCT) a class
+//array of objects- name , id , status, status(actiev or not), start ime, end time,TIMESTAMP
+//list if active show start time and if not active/terminated show start and end time
+//(var name )mylist.pname ,mylist.pid
+//getline reads entire line with spaces and stops when it reads a new line \n
+#include <iostream>
+#include <string>
+#include <cstring>
+#include <windows.h>
+#include <time.h>
+using namespace std;
+
+struct process{
+HANDLE handle;
+int pid=0;
+char pname[30];
+char status='a';
+char startT[30];
+char endT[30];
+char priority[10];
+string status1()
+{
+if(status=='a')
+    return "active";
+    else
+    return "inactive";
+}
+void display()
+{
+cout <<pname<<"\t"<<pid<<"\t"<<priority<<"\t"<<status1()<<" "<<startT<<"-"<<endT<<endl;
+};
+};
+
+int main() {
+	cout<<"use lower case"<<endl;
+//command input
+    time_t now;
+	string comm;
+    int count=0;
+//for process count
+//result declared for operations
+    int result=0;
+//for while loop
+    int i=0;
+    process pList [50];
+while(i == 0){
+        cout<<">>";
+    getline(cin, comm);
+//get the first word from the function
+	string start = comm.substr(0, comm.find(" "));
+//everything after the first word
+	string rem = comm.substr(comm.find(" ")+1, comm.length() - 1);
+    result=0;
+
+//convert string to char []
+    char rem_arr[rem.size()+1];
+    strcpy(rem_arr, rem.c_str());
+    char * p = strtok(rem_arr," ");
+
+//convert start to char []
+    char start_arr[start.size()+1];
+    strcpy(start_arr, start.c_str());
+
+    if(strcmp(start_arr, "exit")==0)
+    {
+        i=1;
+    }
+
+    else if(strcmp(start_arr, "kill_all")==0)
+        {
+        int n=0;char fl=0;
+        for(n=0;  n<=count;n++){
+                if(pList[n].status=='a')
+            {
+        TerminateProcess(pList[n].handle,0);
+        strcpy(pList[n].endT, ctime(&now));
+        pList[n].status='x';
+        fl=1; //flag
+                }
+                }
+
+
+            if(fl==0)
+            cout<<"no process found";
+
+        }
+    else if(strcmp(start_arr, "kill")==0)
+        {
+            if(p==NULL){
+                    cout<<"incomplete command"<<endl;
+                continue;
+            }
+        int n=0;char fl=0;
+        for(n=0;  n<=count;n++){
+                if(strcmp(pList[n].pname, rem_arr )==0)
+            {
+                if(pList[n].status=='a')
+            {
+                    TerminateProcess(pList[n].handle,0);
+                    strcpy(pList[n].endT, ctime(&now));
+                    pList[n].status='x';
+                    cout<<"terminated"<<endl;
+                    fl=1; //flag
+                    break;
+            }
+            }                   }
+            if(fl==0)
+            cout<<"not found";
+
+        }
+    else if(strcmp(start_arr, "list")==0)
+    {
+        int n=0;
+        cout<<"PNAME\tPID\tPRIORITY STATUS\tS_TIME"<<"\t\t\tE_TIME"<<endl;
+        while(pList[n].pid!=0)
+            {
+                pList[n].display();
+                n++;
+            }
+    }
+    else if(strcmp(start_arr, "run")==0)
+    {
+        if(p==NULL){
+                    cout<<"incomplete command"<<endl;
+                continue;
+            }
+        process obj1;
+        STARTUPINFO siStartupInfo={0};
+        ZeroMemory(&siStartupInfo, sizeof(siStartupInfo) );
+        siStartupInfo.cb = sizeof(STARTUPINFO);
+        PROCESS_INFORMATION piProcessInfo={0};
+        DWORD dwProcessId=0;
+        char * p1=p;
+        p = strtok(NULL," ");
+        if(p==NULL){
+            cout<<"enter priority: high/normal"<<endl;
+            continue;
+        }
+        if(strcmp(p, "high")!=0 && strcmp(p, "normal")!=0){
+            cout<<"invalid priority. enter high/normal"<<endl;
+            continue;
+        }
+        ZeroMemory(&piProcessInfo, sizeof(piProcessInfo) );
+        DWORD pri_no=0x00000020;//normal priority
+                                            if(strcmp(p, "high")==0){
+                                                pri_no=0x00000080;
+                                            }
+
+                                   // SetPriorityClass(obj1.handle,pri_no);
+        bool bCreateProcess = FALSE;
+
+
+        bCreateProcess=CreateProcess(   NULL,//no module name, application name
+                                        p1, //command line
+                                        NULL, //processAttributes
+                                        NULL, //threadAttributes
+                                        FALSE, //inheritHandles
+                                        pri_no, //CreationFlags: flags that control the priority class
+                                        NULL,//environment
+                                        NULL,//currentDirectory
+                                        &siStartupInfo, //StartUpInfo
+                                        &piProcessInfo); //ProcessInfo
+                                 if(bCreateProcess == FALSE){
+                                    cout << "failed";
+                                                            }
+                                    else{
+                                    obj1.pid= piProcessInfo.dwProcessId;
+                                    strcpy(obj1.pname, rem_arr);
+                                    obj1.handle=piProcessInfo.hProcess;
+                                    time(&now);
+                                    strcpy(obj1.startT, ctime(&now));
+                                    strcpy(obj1.priority, p);
+                                    pList[count++]=obj1;
+                                    cout<<"successful"<<endl;
+                                        }}
+
+    else if (strcmp(start_arr, "add")==0)
+	{   //atoi converts to integer
+	    if(p==NULL){
+                    cout<<"incomplete command"<<endl;
+                continue;
+            }
+	        while(p!=NULL)  {
+                result=result+ atoi(p);
+                p = strtok(NULL," ");
+                            }
+                            cout << (int)result;
+	}
+
+    else if (strcmp(start_arr, "sub")==0)
+	{   if(p==NULL){
+                    cout<<"incomplete command"<<endl;
+                continue;
+            }
+	    result=atoi(p);
+        p=strtok(NULL," ");
+                while(p!=NULL)          {
+                        result = result- atoi(p);
+                        p = strtok(NULL," ");
+                                        }
+                            cout << (int)result;
+
+	}
+
+    else if (strcmp(start_arr, "mul")==0)
+    {
+        if(p==NULL){
+                    cout<<"incomplete command"<<endl;
+                continue;
+            }
+        result=1;
+                while(p!=NULL)          {
+                        result = result * atoi(p);
+                        p = strtok(NULL," ");
+                                        }
+        cout << (int)result;
+
+    }
+
+    else if(strcmp(start_arr, "div")==0)
+    {   if(p==NULL){
+                    cout<<"incomplete command"<<endl;
+                continue;
+            }
+           result=atoi(p);
+           p = strtok(NULL," ");
+
+           while(p!=NULL)          {
+                result= result/atoi(p);
+
+                p = strtok(NULL," ");
+                            }
+                            cout << (int)result;
+
+    }
+
+    else if(strcmp(start_arr, "help")==0)
+    {
+    cout <<"To run (priority can be high or normal):\t\t run <name> <priority>" <<endl;
+    cout <<"To kill(kills the named process, fist in the list):\t kill <name>" <<endl;
+    cout <<"To kill all active processes:\t\t\t\t kill_all" <<endl;
+    cout <<"to display list of all processes (active or inactive):\t list" <<endl;
+    cout <<"To add use:\t\t\t\t\t\t add <#> <#> <#>..." <<endl;
+    cout <<"To subtract use:\t\t\t\t\t sub <#> <#> <#>..." <<endl;
+    cout <<"To multiply use:\t\t\t\t\t mul <#> <#> <#>..." <<endl;
+    cout <<"To divide use:\t\t\t\t\t\t div <#> <#> <#>..." <<endl;
+    cout <<"To exit use:\t\t\t\t\t\t exit" <<endl;
+    }
+
+    else	//default case
+	{
+	cout << "invalid command";
+	}
+    cout<<endl ;
+
+}
+
+	return 0;
+}
+
